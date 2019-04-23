@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
@@ -52,14 +53,16 @@ impl Counter {
 }
 
 pub fn print_tree() -> std::io::Result<()> {
-    let setting: Setting = parase_parameter()?;;
-    let mut prefix = vec!["".to_string()];
+    let setting: Setting = parase_parameter()?;
     let mut counter = Counter::new();
-    print_prefix(&prefix);
+    let mut prefix = VecDeque::new();
+    prefix.push_back(counter.leaf.clone());
+    println!("{}",setting.root);
     print_subdir(
-        &std::path::PathBuf::from(setting.root),
+        &std::path::PathBuf::from(&setting.root),
         &mut prefix,
         &mut counter,
+        & setting,
     )?;
     println!(
         "\ntotal file: {}, printed file: {}, total directory: {}, printed directory: {}",
@@ -72,7 +75,7 @@ pub fn print_tree() -> std::io::Result<()> {
     Ok(())
 }
 
-fn print_prefix(prefix: &Vec<String>) {
+fn print_prefix(prefix: &VecDeque<String>) {
     for item in prefix {
         print!("{}", item);
     }
@@ -80,38 +83,87 @@ fn print_prefix(prefix: &Vec<String>) {
 
 fn print_subdir(
     root: &std::path::PathBuf,
-    prefix: &mut Vec<String>,
+    prefix: &mut VecDeque<String>,
     counter: &mut Counter,
+    setting: &Setting,
 ) -> std::io::Result<()> {
-    //println!("root : {}",root);
-    for _file in fs::read_dir(root)? {
-        let file = _file?;
-        let path = file.path();
+    let mut path_list : Vec<std::path::PathBuf> = fs::read_dir(root)?.map(|item|->std::path::PathBuf {
+        match item{
+            Ok(sth) => sth.path(),
+            _ => std::path::PathBuf::new(),
+        }
+    }).collect();
+    path_list.sort();
+
+    let file_num = fs::read_dir(root)?.count();
+    let mut iter_cnt = 0;
+    for path in path_list {
         let mut file_name = "";
+        iter_cnt += 1;
         if let Some(os_str) = path.file_name() {
             if let Some(s) = os_str.to_str() {
                 file_name = s;
             }
         }
+
+        // identify the last item
+        if iter_cnt == file_num{
+            prefix.pop_back();
+            prefix.push_back(counter.end_leaf.clone());
+        }
+        else if iter_cnt == 1{
+            prefix.pop_back();
+            prefix.push_back(counter.leaf.clone());
+        }
+
+        // judge for flag `-a`
+        if setting.is_all == false && !is_visible(file_name){
+            continue;
+        }
+
         let metadata = path.metadata().expect("metadata call failed");
-        //println!("{:b}",metadata.permissions().mode());
         print_prefix(&prefix);
-        println!("{:?}", file_name);
+        println!("{}", file_name);
+        increase_counter(&path,&file_name,counter);      
 
         // is dir
         if path.is_dir() {
-            counter.increase_dir(is_visible(file_name));
-            prefix.push(counter.leaf.clone());
-            print_subdir(&path, prefix, counter)?;
-            prefix.pop();
-        }
-        // else is file
-        else {
-            counter.increase_file(is_visible(file_name));
+            // insert prefix
+            prefix.pop_back();
+            if iter_cnt == file_num{
+                prefix.push_back(counter.tab.clone());
+                prefix.push_back(counter.end_leaf.clone());
+            }
+            else{
+                prefix.push_back(counter.sub_dir_tab.clone());
+                prefix.push_back(counter.leaf.clone());
+            }
+
+            // recursive
+            print_subdir(&path, prefix, counter,setting)?;
+            
+            // recover prefix
+            prefix.pop_back();
+            prefix.pop_back();
+            if iter_cnt +1  == file_num{
+                prefix.push_back(counter.end_leaf.clone());
+            }
+            else{
+                prefix.push_back(counter.leaf.clone());
+            }
         }
     }
 
     Ok(())
+}
+
+fn increase_counter(path: &std::path::PathBuf, file_name : &str, counter: &mut Counter){
+    if path.is_dir() {
+        counter.increase_dir(is_visible(file_name));
+    }
+    else{
+        counter.increase_file(is_visible(file_name));
+    }
 }
 
 fn is_file_executable(metadata: fs::Metadata) -> bool {
@@ -119,9 +171,16 @@ fn is_file_executable(metadata: fs::Metadata) -> bool {
 }
 
 fn is_visible(name: &str) -> bool {
-    if let Some(character) = name.get(0..0) {
-        character == "."
+    if let Some(character) = name.get(0..1) {
+        !(character == ".")
     } else {
         false
     }
+}
+
+
+#[test]
+fn test_is_visible(){
+    assert_eq!(is_visible(".git"),false);
+    assert_eq!(is_visible("asdfasd"),true);
 }

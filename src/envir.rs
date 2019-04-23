@@ -9,7 +9,7 @@ pub fn parase_parameter() -> std::io::Result<Setting> {
     let args: Vec<String> = env::args().collect();
     println!("{:?}", args);
     let mut setting = Setting {
-        is_all: true,
+        is_all: false,
         root: "./".to_string(),
     };
     for i in args.iter() {
