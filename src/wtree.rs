@@ -3,6 +3,7 @@ use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
 use crate::envir::*;
+use crate::utils::*;
 
 struct Counter {
     visible_file_count: u32,
@@ -55,14 +56,15 @@ impl Counter {
 pub fn print_tree() -> std::io::Result<()> {
     let setting: Setting = parase_parameter()?;
     let mut counter = Counter::new();
-    let mut prefix = VecDeque::new();
-    prefix.push_back(counter.leaf.clone());
-    println!("{}",setting.root);
+    let mut prefix = Prefix::new();
+    prefix.set_init_value(counter.leaf.clone());
+    //prefix.push_back(counter.leaf.clone());
+    println!("{}", setting.root);
     print_subdir(
         &std::path::PathBuf::from(&setting.root),
         &mut prefix,
         &mut counter,
-        & setting,
+        &setting,
     )?;
     println!(
         "\ntotal file: {}, printed file: {}, total directory: {}, printed directory: {}",
@@ -75,24 +77,20 @@ pub fn print_tree() -> std::io::Result<()> {
     Ok(())
 }
 
-fn print_prefix(prefix: &VecDeque<String>) {
-    for item in prefix {
-        print!("{}", item);
-    }
-}
-
 fn print_subdir(
     root: &std::path::PathBuf,
-    prefix: &mut VecDeque<String>,
+    prefix: &mut Prefix,
     counter: &mut Counter,
     setting: &Setting,
 ) -> std::io::Result<()> {
-    let mut path_list : Vec<std::path::PathBuf> = fs::read_dir(root)?.map(|item|->std::path::PathBuf {
-        match item{
-            Ok(sth) => sth.path(),
-            _ => std::path::PathBuf::new(),
-        }
-    }).collect();
+    let mut path_list: Vec<std::path::PathBuf> = fs::read_dir(root)?
+        .map(|item| -> std::path::PathBuf {
+            match item {
+                Ok(sth) => sth.path(),
+                _ => std::path::PathBuf::new(),
+            }
+        })
+        .collect();
     path_list.sort();
 
     let file_num = fs::read_dir(root)?.count();
@@ -107,61 +105,38 @@ fn print_subdir(
         }
 
         // identify the last item
-        if iter_cnt == file_num{
-            prefix.pop_back();
-            prefix.push_back(counter.end_leaf.clone());
-        }
-        else if iter_cnt == 1{
-            prefix.pop_back();
-            prefix.push_back(counter.leaf.clone());
-        }
+        prefix.add_prefix(iter_cnt == 1, iter_cnt == file_num, false);
 
         // judge for flag `-a`
-        if setting.is_all == false && !is_visible(file_name){
+        if setting.is_all == false && !is_visible(file_name) {
             continue;
         }
 
         let metadata = path.metadata().expect("metadata call failed");
-        print_prefix(&prefix);
+        //print_prefix(&prefix);
+        prefix.print();
         println!("{}", file_name);
-        increase_counter(&path,&file_name,counter);      
+        increase_counter(&path, &file_name, counter);
 
         // is dir
         if path.is_dir() {
-            // insert prefix
-            prefix.pop_back();
-            if iter_cnt == file_num{
-                prefix.push_back(counter.tab.clone());
-                prefix.push_back(counter.end_leaf.clone());
-            }
-            else{
-                prefix.push_back(counter.sub_dir_tab.clone());
-                prefix.push_back(counter.leaf.clone());
-            }
+            prefix.add_prefix(false, iter_cnt == file_num, true);
 
             // recursive
-            print_subdir(&path, prefix, counter,setting)?;
-            
+            print_subdir(&path, prefix, counter, setting)?;
+
             // recover prefix
-            prefix.pop_back();
-            prefix.pop_back();
-            if iter_cnt +1  == file_num{
-                prefix.push_back(counter.end_leaf.clone());
-            }
-            else{
-                prefix.push_back(counter.leaf.clone());
-            }
+            prefix.remove_prefix(iter_cnt + 1 == file_num, true);
         }
     }
 
     Ok(())
 }
 
-fn increase_counter(path: &std::path::PathBuf, file_name : &str, counter: &mut Counter){
+fn increase_counter(path: &std::path::PathBuf, file_name: &str, counter: &mut Counter) {
     if path.is_dir() {
         counter.increase_dir(is_visible(file_name));
-    }
-    else{
+    } else {
         counter.increase_file(is_visible(file_name));
     }
 }
@@ -178,9 +153,8 @@ fn is_visible(name: &str) -> bool {
     }
 }
 
-
 #[test]
-fn test_is_visible(){
-    assert_eq!(is_visible(".git"),false);
-    assert_eq!(is_visible("asdfasd"),true);
+fn test_is_visible() {
+    assert_eq!(is_visible(".git"), false);
+    assert_eq!(is_visible("asdfasd"), true);
 }
