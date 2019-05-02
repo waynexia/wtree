@@ -1,9 +1,9 @@
-use std::collections::VecDeque;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
-use crate::envir::*;
 use crate::utils::*;
+extern crate lazy_static;
+use crate::envir::Setting;
 
 struct Counter {
     visible_file_count: u32,
@@ -54,18 +54,11 @@ impl Counter {
 }
 
 pub fn print_tree() -> std::io::Result<()> {
-    let setting: Setting = parase_parameter()?;
     let mut counter = Counter::new();
     let mut prefix = Prefix::new();
     prefix.set_init_value(counter.leaf.clone());
     //prefix.push_back(counter.leaf.clone());
-    println!("{}", setting.root);
-    print_subdir(
-        &std::path::PathBuf::from(&setting.root),
-        &mut prefix,
-        &mut counter,
-        &setting,
-    )?;
+    print_subdir(&std::path::PathBuf::from("./"), &mut prefix, &mut counter)?;
     println!(
         "\ntotal file: {}, printed file: {}, total directory: {}, printed directory: {}",
         counter.get_counter().0,
@@ -81,7 +74,6 @@ fn print_subdir(
     root: &std::path::PathBuf,
     prefix: &mut Prefix,
     counter: &mut Counter,
-    setting: &Setting,
 ) -> std::io::Result<()> {
     let mut path_list: Vec<std::path::PathBuf> = fs::read_dir(root)?
         .map(|item| -> std::path::PathBuf {
@@ -108,9 +100,6 @@ fn print_subdir(
         prefix.add_prefix(iter_cnt == 1, iter_cnt == file_num, false);
 
         // judge for flag `-a`
-        if setting.is_all == false && !is_visible(file_name) {
-            continue;
-        }
 
         let metadata = path.metadata().expect("metadata call failed");
         //print_prefix(&prefix);
@@ -123,7 +112,7 @@ fn print_subdir(
             prefix.add_prefix(false, iter_cnt == file_num, true);
 
             // recursive
-            print_subdir(&path, prefix, counter, setting)?;
+            print_subdir(&path, prefix, counter)?;
 
             // recover prefix
             prefix.remove_prefix(iter_cnt + 1 == file_num, true);

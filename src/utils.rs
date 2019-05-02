@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 
+use crate::envir::Setting;
 use crate::print::*;
 
 enum PrefixMode {
@@ -32,12 +33,19 @@ impl Prefix {
     pub fn new() -> Prefix {
         Prefix {
             prefix: VecDeque::new(),
-            mode: PrefixMode::file_tree,
+            mode: if Setting::is_no_indentation() {
+                PrefixMode::none
+            } else {
+                PrefixMode::file_tree
+            },
         }
     }
 
     pub fn set_init_value(&mut self, init_prefix: String) {
-        self.prefix.push_back(init_prefix);
+        match self.mode{
+            PrefixMode::file_tree => self.prefix.push_back(init_prefix),
+            _ => {}
+        }
     }
 
     pub fn add_prefix(&mut self, is_begin: bool, is_last: bool, is_dir: bool) {
