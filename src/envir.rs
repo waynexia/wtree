@@ -1,5 +1,5 @@
-use std::env;
 use lazy_static::lazy_static;
+use std::env;
 
 #[macro_use]
 lazy_static! {
@@ -10,18 +10,27 @@ pub struct Setting {
     pub is_all: bool,
     pub is_dir_only: bool,
     pub is_no_indentation: bool,
+    pub is_sort_alphanumerically: bool,
+    pub is_sort_mod_time: bool,
+    pub is_unsort: bool,
+    pub is_sort_reverse: bool,
+    pub is_dir_first: bool,
     pub root: String,
 }
 
 fn parase_parameter() -> Setting {
-
     let mut args: Vec<String> = env::args().collect();
+    // remove the first arg which is command name
     args.remove(0);
-    println!("{:?}", args);
     let mut ret = Setting {
         is_all: false,
         is_dir_only: false,
         is_no_indentation: false,
+        is_sort_alphanumerically: false,
+        is_sort_mod_time: false,
+        is_unsort: false,
+        is_sort_reverse: false,
+        is_dir_first: false,
         root: "./".to_string(),
     };
     for i in args.iter() {
@@ -29,6 +38,11 @@ fn parase_parameter() -> Setting {
             "-a" => ret.is_all = true,
             "-d" => ret.is_dir_only = true,
             "-i" => ret.is_no_indentation = true,
+            "-v" => ret.is_sort_alphanumerically = true,
+            "-t" => ret.is_sort_mod_time = true,
+            "-U" => ret.is_unsort = true,
+            "-r" => ret.is_sort_reverse = true,
+            "--dirsfirst" => ret.is_dir_first = true,
 
             _ => Setting::error_report("Invalid argument: ".to_string() + i.as_ref()),
         }
@@ -115,8 +129,45 @@ usage: tree [-acdfghilnpqrstuvxACDFJQNSUX] [-H baseHREF] [-T title ]
 }
 
 impl Setting {
+    // use marco or other ways to make it normally
     pub fn is_no_indentation() -> bool {
         if setting.is_no_indentation {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_sort_alphanumerically() -> bool {
+        if setting.is_sort_alphanumerically {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_sort_mod_time() -> bool {
+        if setting.is_sort_mod_time {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_unsort() -> bool {
+        if setting.is_unsort {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_sort_reverse() -> bool {
+        if setting.is_sort_reverse {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_dir_first() -> bool {
+        if setting.is_dir_first {
             true
         } else {
             false

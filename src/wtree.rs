@@ -57,8 +57,11 @@ pub fn print_tree() -> std::io::Result<()> {
     let mut counter = Counter::new();
     let mut prefix = Prefix::new();
     prefix.set_init_value(counter.leaf.clone());
-    //prefix.push_back(counter.leaf.clone());
-    print_subdir(&std::path::PathBuf::from("./"), &mut prefix, &mut counter)?;
+    print_subdir(
+        &Entry::new(std::path::PathBuf::from("./").canonicalize().unwrap()),
+        &mut prefix,
+        &mut counter,
+    )?;
     println!(
         "\ntotal file: {}, printed file: {}, total directory: {}, printed directory: {}",
         counter.get_counter().0,
@@ -70,42 +73,21 @@ pub fn print_tree() -> std::io::Result<()> {
     Ok(())
 }
 
-fn print_subdir(
-    root: &std::path::PathBuf,
-    prefix: &mut Prefix,
-    counter: &mut Counter,
-) -> std::io::Result<()> {
-    let mut path_list: Vec<std::path::PathBuf> = fs::read_dir(root)?
-        .map(|item| -> std::path::PathBuf {
-            match item {
-                Ok(sth) => sth.path(),
-                _ => std::path::PathBuf::new(),
-            }
-        })
-        .collect();
-    path_list.sort();
+fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std::io::Result<()> {
+    let path_list = root.traverse()?;
 
-    let file_num = fs::read_dir(root)?.count();
+    let file_num = path_list.len();
+
     let mut iter_cnt = 0;
     for path in path_list {
-        let mut file_name = "";
         iter_cnt += 1;
-        if let Some(os_str) = path.file_name() {
-            if let Some(s) = os_str.to_str() {
-                file_name = s;
-            }
-        }
 
         // identify the last item
         prefix.add_prefix(iter_cnt == 1, iter_cnt == file_num, false);
 
-        // judge for flag `-a`
-
-        let metadata = path.metadata().expect("metadata call failed");
-        //print_prefix(&prefix);
         prefix.print();
-        println!("{}", file_name);
-        increase_counter(&path, &file_name, counter);
+        path.print();
+        increase_counter(path.is_dir(), path.is_visible(), counter);
 
         // is dir
         if path.is_dir() {
@@ -122,11 +104,11 @@ fn print_subdir(
     Ok(())
 }
 
-fn increase_counter(path: &std::path::PathBuf, file_name: &str, counter: &mut Counter) {
-    if path.is_dir() {
-        counter.increase_dir(is_visible(file_name));
+fn increase_counter(is_dir: bool, is_visible: bool, counter: &mut Counter) {
+    if is_dir {
+        counter.increase_dir(is_visible);
     } else {
-        counter.increase_file(is_visible(file_name));
+        counter.increase_file(is_visible);
     }
 }
 

@@ -63,22 +63,22 @@ a simple `tree` command
   - [ ] --device      Print device ID number to which each file belongs.
 
 - ## Sorting options
-  - [ ] -v            Sort files alphanumerically by version.
+  - [x] -v            Sort files alphanumerically by version.
 
-  - [ ] -t            Sort files by last modification time.
+  - [x] -t            Sort files by last modification time.
 
   - [ ] -c            Sort files by last status change time.
 
-  - [ ] -U            Leave files unsorted.
+  - [x] -U            Leave files unsorted.
 
-  - [ ] -r            Reverse the order of the sort.
+  - [x] -r            Reverse the order of the sort.
 
-  - [ ] --dirsfirst   List directories before files (-U disables).
+  - [x] --dirsfirst   List directories before files (-U disables).
 
   - [ ] --sort X      Select sort: name,version,size,mtime,ctime.
 
 - ## Graphics options
-  - [ ] -i            Don't print indentation lines.
+  - [x] -i            Don't print indentation lines.
 
   - [ ] -A            Print ANSI lines graphic indentation lines.
 
