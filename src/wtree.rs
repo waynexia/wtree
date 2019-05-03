@@ -6,69 +6,45 @@ extern crate lazy_static;
 use crate::envir::Setting;
 
 struct Counter {
-    visible_file_count: u32,
     file_count: u32,
-    visible_dir_count: u32,
     dir_count: u32,
-    pub tab: String,
-    pub leaf: String,
-    pub end_leaf: String,
-    pub sub_dir_tab: String,
 }
 impl Counter {
     pub fn new() -> Counter {
         Counter {
-            visible_file_count: 0,
             file_count: 0,
-            visible_dir_count: 0,
             dir_count: 0,
-            tab: "    ".to_string(),
-            leaf: "├── ".to_string(),
-            end_leaf: "└── ".to_string(),
-            sub_dir_tab: "│   ".to_string(),
         }
     }
 
-    pub fn increase_file(&mut self, is_visible: bool) {
-        self.file_count += 1;
-        if is_visible {
-            self.visible_file_count += 1;
+    pub fn increase_counter(&mut self, is_dir: bool) {
+        if is_dir {
+            self.dir_count += 1;
+        } else {
+            self.file_count += 1;
         }
     }
 
-    pub fn increase_dir(&mut self, is_visible: bool) {
-        self.dir_count += 1;
-        if is_visible {
-            self.visible_dir_count += 1;
+    pub fn print_counter(&self) {
+        if Setting::is_needing_report() {
+            println!(
+                "\n{} directories, {} files",
+                self.dir_count, self.file_count,
+            );
         }
-    }
-
-    pub fn get_counter(&self) -> (u32, u32, u32, u32) {
-        (
-            self.visible_dir_count,
-            self.dir_count,
-            self.visible_file_count,
-            self.file_count,
-        )
     }
 }
 
 pub fn print_tree() -> std::io::Result<()> {
     let mut counter = Counter::new();
     let mut prefix = Prefix::new();
-    prefix.set_init_value(counter.leaf.clone());
+    prefix.set_init_value("├── ".to_string());
     print_subdir(
         &Entry::new(std::path::PathBuf::from("./").canonicalize().unwrap()),
         &mut prefix,
         &mut counter,
     )?;
-    println!(
-        "\ntotal file: {}, printed file: {}, total directory: {}, printed directory: {}",
-        counter.get_counter().0,
-        counter.get_counter().1,
-        counter.get_counter().2,
-        counter.get_counter().3
-    );
+    counter.print_counter();
 
     Ok(())
 }
@@ -87,7 +63,7 @@ fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std
 
         prefix.print();
         path.print();
-        increase_counter(path.is_dir(), path.is_visible(), counter);
+        counter.increase_counter(path.is_dir());
 
         // is dir
         if path.is_dir() {
@@ -104,28 +80,6 @@ fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std
     Ok(())
 }
 
-fn increase_counter(is_dir: bool, is_visible: bool, counter: &mut Counter) {
-    if is_dir {
-        counter.increase_dir(is_visible);
-    } else {
-        counter.increase_file(is_visible);
-    }
-}
-
 fn is_file_executable(metadata: fs::Metadata) -> bool {
     metadata.permissions().mode() & 0o111 != 0
-}
-
-fn is_visible(name: &str) -> bool {
-    if let Some(character) = name.get(0..1) {
-        !(character == ".")
-    } else {
-        false
-    }
-}
-
-#[test]
-fn test_is_visible() {
-    assert_eq!(is_visible(".git"), false);
-    assert_eq!(is_visible("asdfasd"), true);
 }

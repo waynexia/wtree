@@ -155,12 +155,15 @@ impl Entry {
     }
 
     pub fn traverse(&self) -> Result<Vec<Entry>, std::io::Error> {
+        // check
         if !self.is_dir {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
                 "cannot open a file as dir",
             ));
         }
+
+        // make entry list
         let mut path_list: Vec<Entry> = fs::read_dir(&self.path)?
             .map(|item| -> Entry {
                 match item {
@@ -168,10 +171,11 @@ impl Entry {
                     _ => Entry::new(PathBuf::new()), // not correct, need to return error
                 }
             })
+            .filter(Entry::filter)
             .collect();
 
         // sort to invisible first to avoid prefix error. not a correct way
-        path_list.sort_by(Entry::invisible_file_first);
+        //path_list.sort_by(Entry::invisible_file_first);
 
         if Setting::is_unsort() {
             return Ok(path_list);
@@ -194,6 +198,20 @@ impl Entry {
         }
 
         Ok(path_list)
+    }
+
+    fn filter(item: &Entry) -> bool {
+        // -a
+        if !Setting::is_all() && !item.is_visible{
+            return false;
+        }
+
+        // -d
+        if Setting::is_dir_only() && !item.is_dir{
+            return false;
+        }
+
+        return true;
     }
 
     fn visible_or_not(name: &str) -> bool {

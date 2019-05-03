@@ -15,6 +15,7 @@ pub struct Setting {
     pub is_unsort: bool,
     pub is_sort_reverse: bool,
     pub is_dir_first: bool,
+    pub is_needing_report: bool,
     pub root: String,
 }
 
@@ -26,11 +27,12 @@ fn parase_parameter() -> Setting {
         is_all: false,
         is_dir_only: false,
         is_no_indentation: false,
-        is_sort_alphanumerically: false,
+        is_sort_alphanumerically: true,
         is_sort_mod_time: false,
         is_unsort: false,
         is_sort_reverse: false,
         is_dir_first: false,
+        is_needing_report: true,
         root: "./".to_string(),
     };
     for i in args.iter() {
@@ -43,6 +45,7 @@ fn parase_parameter() -> Setting {
             "-U" => ret.is_unsort = true,
             "-r" => ret.is_sort_reverse = true,
             "--dirsfirst" => ret.is_dir_first = true,
+            "--noreport" => ret.is_needing_report = false,
 
             _ => Setting::error_report("Invalid argument: ".to_string() + i.as_ref()),
         }
@@ -130,6 +133,14 @@ usage: tree [-acdfghilnpqrstuvxACDFJQNSUX] [-H baseHREF] [-T title ]
 
 impl Setting {
     // use marco or other ways to make it normally
+    pub fn is_all() -> bool{
+        setting.is_all
+    }
+
+    pub fn is_dir_only() -> bool {
+        setting.is_dir_only
+    }
+
     pub fn is_no_indentation() -> bool {
         if setting.is_no_indentation {
             true
@@ -172,5 +183,9 @@ impl Setting {
         } else {
             false
         }
+    }
+
+    pub fn is_needing_report() -> bool{
+        setting.is_needing_report
     }
 }
