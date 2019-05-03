@@ -5,13 +5,13 @@ a simple `tree` command
 
 # options
 - ## Listing options
-  - [ ] -a            All files are listed.
+  - [x] -a            All files are listed.
 
-  - [ ] -d            List directories only.
+  - [x] -d            List directories only.
 
   - [ ] -l            Follow symbolic links like directories.
 
-  - [ ] -f            Print the full path prefix for each file.
+  - [x] -f            Print the full path prefix for each file. *different behavier with `tree`*
 
   - [ ] -x            Stay on current filesystem only.
 
@@ -19,15 +19,15 @@ a simple `tree` command
 
   - [ ] -R            Rerun tree when max dir level reached.
 
-  - [ ] -P pattern    List only those files that match the pattern given.
+  - [x] -P pattern    List only those files that match the pattern given. *different behavier with `tree`*
 
-  - [ ] -I pattern    Do not list files that match the given pattern.
+  - [x] -I pattern    Do not list files that match the given pattern. *different behavier with `tree`*
 
-  - [ ] --ignore-case Ignore case when pattern matching.
+  - [x] --ignore-case Ignore case when pattern matching.
 
   - [ ] --matchdirs   Include directory names in -P pattern matching.
 
-  - [ ] --noreport    Turn off file/directory count at end of tree listing.
+  - [x] --noreport    Turn off file/directory count at end of tree listing.
 
   - [ ] --charset X   Use charset X for terminal/HTML and indentation line output.
 
@@ -42,7 +42,7 @@ a simple `tree` command
 
   - [ ] -N            Print non-printable characters as is.
 
-  - [ ] -Q            Quote filenames with double quotes.
+  - [x] -Q            Quote filenames with double quotes.
 
   - [ ] -p            Print the protections for each file.
 

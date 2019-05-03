@@ -135,7 +135,11 @@ impl Entry {
                     .to_str()
                     .unwrap(),
             ),
-            path_prefix: path.parent().unwrap().to_path_buf(),
+            path_prefix: {
+                path.strip_prefix(Setting::get_root_prefix())
+                    .unwrap()
+                    .to_path_buf()
+            },
             entry_name: String::from(path.file_name().unwrap().to_str().unwrap()),
             metadata: path.metadata().expect(path.to_str().unwrap()),
             path,
@@ -143,7 +147,16 @@ impl Entry {
     }
 
     pub fn print(&self) {
-        println!("{}", self.entry_name);
+        let mut entry_name_to_print = self.entry_name.clone();
+        if Setting::is_full_path() {
+            entry_name_to_print
+                .insert_str(0, self.path_prefix.to_str().expect("not utf-8 filename"));
+        }
+        if Setting::is_quote() {
+            println!("{:?}", entry_name_to_print);
+        } else {
+            println!("{}", entry_name_to_print);
+        }
     }
 
     pub fn is_dir(&self) -> bool {
@@ -174,9 +187,6 @@ impl Entry {
             .filter(Entry::filter)
             .collect();
 
-        // sort to invisible first to avoid prefix error. not a correct way
-        //path_list.sort_by(Entry::invisible_file_first);
-
         if Setting::is_unsort() {
             return Ok(path_list);
         }
@@ -202,13 +212,32 @@ impl Entry {
 
     fn filter(item: &Entry) -> bool {
         // -a
-        if !Setting::is_all() && !item.is_visible{
+        if !Setting::is_all() && !item.is_visible {
             return false;
         }
 
         // -d
-        if Setting::is_dir_only() && !item.is_dir{
+        if Setting::is_dir_only() && !item.is_dir {
             return false;
+        }
+
+        // pattern (-I or -P)
+        if let Some((method, pattern, ignore_case)) = Setting::get_pattern() {
+            let entry_name = if ignore_case {
+                item.entry_name.to_lowercase()
+            } else {
+                item.entry_name.clone()
+            };
+            let p = if ignore_case {
+                pattern.to_lowercase()
+            } else {
+                pattern
+            };
+            if method == 'i' {
+                return entry_name.find(p.as_str()) == Option::None;
+            } else {
+                return entry_name.find(p.as_str()) != Option::None;
+            }
         }
 
         return true;
@@ -223,16 +252,6 @@ impl Entry {
     }
 
     // sort functions
-    fn invisible_file_first(a: &Entry, b: &Entry) -> Ordering {
-        if !(a.is_visible ^ b.is_visible) {
-            return Ordering::Equal;
-        } else if !a.is_visible {
-            return Ordering::Greater;
-        } else {
-            return Ordering::Less;
-        }
-    }
-
     fn dir_first(a: &Entry, b: &Entry) -> Ordering {
         if !(a.is_dir ^ b.is_dir) {
             return Ordering::Equal;
@@ -246,11 +265,11 @@ impl Entry {
     fn sort_by_modified_time(a: &Entry, b: &Entry) -> Ordering {
         let a_time = match a.metadata.modified() {
             Ok(time) => time,
-            Err(e) => SystemTime::now(),
+            Err(_e) => SystemTime::now(),
         };
         let b_time = match a.metadata.modified() {
             Ok(time) => time,
-            Err(e) => SystemTime::now(),
+            Err(_e) => SystemTime::now(),
         };
         a_time.cmp(&b_time)
     }

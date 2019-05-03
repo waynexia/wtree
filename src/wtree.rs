@@ -39,8 +39,10 @@ pub fn print_tree() -> std::io::Result<()> {
     let mut counter = Counter::new();
     let mut prefix = Prefix::new();
     prefix.set_init_value("├── ".to_string());
+    let root_entry = Entry::new(Setting::get_root());
+    root_entry.print();
     print_subdir(
-        &Entry::new(std::path::PathBuf::from("./").canonicalize().unwrap()),
+        &root_entry,
         &mut prefix,
         &mut counter,
     )?;

@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use std::env;
+use std::path::PathBuf;
 
 #[macro_use]
 lazy_static! {
@@ -16,13 +17,35 @@ pub struct Setting {
     pub is_sort_reverse: bool,
     pub is_dir_first: bool,
     pub is_needing_report: bool,
-    pub root: String,
+    pub pattern_p: bool,
+    pub pattern_i: bool,
+    pub is_quote: bool,
+    pub is_full_path: bool,
+    pub pattern_ignore_case: bool,
+
+    pub pattern: String,
+    pub root: PathBuf,
 }
 
 fn parase_parameter() -> Setting {
     let mut args: Vec<String> = env::args().collect();
     // remove the first arg which is command name
     args.remove(0);
+    //extract last parameter, if not a path, put it back
+    let root_path: PathBuf = if let Some(path) = args.pop() {
+        if PathBuf::from(path.clone()).is_dir() {
+            PathBuf::from(path.clone())
+        } else {
+            args.push(path);
+            PathBuf::from("./".to_string())
+        }
+    } else {
+        PathBuf::from("./".to_string())
+    }.canonicalize().unwrap();
+
+    //println!("{:?}",root_path);
+    //panic!();
+
     let mut ret = Setting {
         is_all: false,
         is_dir_only: false,
@@ -33,9 +56,19 @@ fn parase_parameter() -> Setting {
         is_sort_reverse: false,
         is_dir_first: false,
         is_needing_report: true,
-        root: "./".to_string(),
+        is_quote: false,
+        is_full_path: false,
+        pattern_i: false,
+        pattern_p: false,
+        pattern_ignore_case: false,
+        pattern: "".to_string(),
+
+        root: root_path.canonicalize().unwrap(),
     };
-    for i in args.iter() {
+
+    let mut args_iter = args.iter().peekable();
+    while args_iter.peek() != Option::None {
+        let i: &String = args_iter.next().unwrap();
         match i.as_ref() {
             "-a" => ret.is_all = true,
             "-d" => ret.is_dir_only = true,
@@ -46,9 +79,31 @@ fn parase_parameter() -> Setting {
             "-r" => ret.is_sort_reverse = true,
             "--dirsfirst" => ret.is_dir_first = true,
             "--noreport" => ret.is_needing_report = false,
+            "--ignore-case" => ret.pattern_ignore_case = true,
+            "-Q" => ret.is_quote = true,
+            "-f" => ret.is_full_path = true,
+            "-P" => {
+                ret.pattern_p = true;
+                // only can exist one pattern
+                if ret.pattern_p && ret.pattern_i {
+                    ret.pattern_i = false;
+                }
+                let pattern: &str = args_iter.peek().expect("need a pattern here");
+                ret.pattern = pattern.to_string();
+            }
+            "-I" => {
+                ret.pattern_i = true;
+                // only can exist one pattern
+                if ret.pattern_p && ret.pattern_i {
+                    ret.pattern_p = false;
+                }
+                let pattern: &str = args_iter.peek().expect("need a pattern here");
+                ret.pattern = pattern.to_string();
+            }
 
             _ => Setting::error_report("Invalid argument: ".to_string() + i.as_ref()),
         }
+        args_iter.next();
     }
 
     ret
@@ -60,6 +115,7 @@ impl Setting {
 
         // print hint
         println!("{}", hint);
+        panic!();
     }
 
     fn print_help() {
@@ -132,8 +188,30 @@ usage: tree [-acdfghilnpqrstuvxACDFJQNSUX] [-H baseHREF] [-T title ]
 }
 
 impl Setting {
-    // use marco or other ways to make it normally
-    pub fn is_all() -> bool{
+    pub fn get_root() -> PathBuf {
+        setting.root.clone()
+    }
+
+    pub fn get_root_prefix() ->PathBuf{
+        match setting.root.parent(){
+            Some(path) => path.to_path_buf().clone(),
+            _ => PathBuf::from("/")
+        }
+    }
+
+    pub fn get_pattern() -> Option<(char, String, bool)> {
+        if !(setting.pattern_p || setting.pattern_i) {
+            return Option::None;
+        } else {
+            return Some((
+                if setting.pattern_p { 'p' } else { 'i' },
+                setting.pattern.clone(),
+                setting.pattern_ignore_case,
+            ));
+        }
+    }
+
+    pub fn is_all() -> bool {
         setting.is_all
     }
 
@@ -141,51 +219,39 @@ impl Setting {
         setting.is_dir_only
     }
 
+    pub fn is_quote() -> bool {
+        setting.is_quote
+    }
+
+    pub fn is_full_path() -> bool {
+        setting.is_full_path
+    }
+
     pub fn is_no_indentation() -> bool {
-        if setting.is_no_indentation {
-            true
-        } else {
-            false
-        }
+        setting.is_no_indentation
     }
 
     pub fn is_sort_alphanumerically() -> bool {
-        if setting.is_sort_alphanumerically {
-            true
-        } else {
-            false
-        }
-    }
-    pub fn is_sort_mod_time() -> bool {
-        if setting.is_sort_mod_time {
-            true
-        } else {
-            false
-        }
-    }
-    pub fn is_unsort() -> bool {
-        if setting.is_unsort {
-            true
-        } else {
-            false
-        }
-    }
-    pub fn is_sort_reverse() -> bool {
-        if setting.is_sort_reverse {
-            true
-        } else {
-            false
-        }
-    }
-    pub fn is_dir_first() -> bool {
-        if setting.is_dir_first {
-            true
-        } else {
-            false
-        }
+        setting.is_sort_alphanumerically
     }
 
-    pub fn is_needing_report() -> bool{
+    pub fn is_sort_mod_time() -> bool {
+        setting.is_sort_mod_time
+    }
+
+    pub fn is_unsort() -> bool {
+        setting.is_unsort
+    }
+
+    pub fn is_sort_reverse() -> bool {
+        setting.is_sort_reverse
+    }
+
+    pub fn is_dir_first() -> bool {
+        setting.is_dir_first
+    }
+
+    pub fn is_needing_report() -> bool {
         setting.is_needing_report
     }
 }
