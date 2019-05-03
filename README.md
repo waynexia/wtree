@@ -1,4 +1,6 @@
 # wtree
+[![Build Status](https://travis-ci.com/waynexia/wtree.svg?token=NgxPfMcELg2LiMt86zCA&branch=master)](https://travis-ci.com/waynexia/wtree)
+
 a simple `tree` command
 
 # options
