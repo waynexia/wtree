@@ -105,9 +105,9 @@ a simple `tree` command
   - [ ] --fromfile    Reads paths from files (.=stdin)
 
 - ## Miscellaneous options
-  - [ ] --version     Print version and exit.
+  - [x] --version     Print version and exit.
 
-  - [ ] --help        Print usage and this help message and exit.
+  - [x] --help        Print usage and this help message and exit.
 
   - [ ] --            Options processing terminator.
 

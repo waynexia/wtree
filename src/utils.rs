@@ -4,27 +4,27 @@ use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fs;
 use std::fs::Metadata;
-use std::path::{Path, PathBuf};
+use std::path::{ PathBuf};
 use std::time::SystemTime;
 
 enum PrefixMode {
-    file_tree,
-    none,
+    FileTree,
+    None,
 }
 
 enum TreePrefix {
-    tab,
-    leaf,
-    end_leaf,
-    sub_dir_tab,
+    Tab,
+    Leaf,
+    EndLeaf,
+    SubDirTab,
 }
 
 fn get_tree_prefix(prefix_type: TreePrefix) -> String {
     match prefix_type {
-        TreePrefix::tab => "    ".to_string(),
-        TreePrefix::leaf => "├── ".to_string(),
-        TreePrefix::end_leaf => "└── ".to_string(),
-        TreePrefix::sub_dir_tab => "│   ".to_string(),
+        TreePrefix::Tab => "    ".to_string(),
+        TreePrefix::Leaf => "├── ".to_string(),
+        TreePrefix::EndLeaf => "└── ".to_string(),
+        TreePrefix::SubDirTab => "│   ".to_string(),
     }
 }
 
@@ -38,49 +38,49 @@ impl Prefix {
         Prefix {
             prefix: VecDeque::new(),
             mode: if Setting::is_no_indentation() {
-                PrefixMode::none
+                PrefixMode::None
             } else {
-                PrefixMode::file_tree
+                PrefixMode::FileTree
             },
         }
     }
 
     pub fn set_init_value(&mut self, init_prefix: String) {
         match self.mode {
-            PrefixMode::file_tree => self.prefix.push_back(init_prefix),
+            PrefixMode::FileTree => self.prefix.push_back(init_prefix),
             _ => {}
         }
     }
 
     pub fn add_prefix(&mut self, is_begin: bool, is_last: bool, is_dir: bool) {
         match &self.mode {
-            PrefixMode::file_tree => {
+            PrefixMode::FileTree => {
                 if is_dir {
                     self.prefix.pop_back();
                     if is_last {
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::tab).clone());
+                            .push_back(get_tree_prefix(TreePrefix::Tab).clone());
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::end_leaf).clone());
+                            .push_back(get_tree_prefix(TreePrefix::EndLeaf).clone());
                     } else {
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::sub_dir_tab).clone());
+                            .push_back(get_tree_prefix(TreePrefix::SubDirTab).clone());
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::leaf).clone());
+                            .push_back(get_tree_prefix(TreePrefix::Leaf).clone());
                     }
                 } else {
                     if is_last {
                         self.prefix.pop_back();
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::end_leaf).clone());
+                            .push_back(get_tree_prefix(TreePrefix::EndLeaf).clone());
                     } else if is_begin {
                         self.prefix.pop_back();
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::leaf).clone());
+                            .push_back(get_tree_prefix(TreePrefix::Leaf).clone());
                     }
                 }
             }
-            PrefixMode::none => {
+            PrefixMode::None => {
                 // no operation is needed here
             }
         }
@@ -88,22 +88,22 @@ impl Prefix {
 
     pub fn remove_prefix(&mut self, is_next_last: bool, is_dir: bool) {
         match &self.mode {
-            PrefixMode::file_tree => {
+            PrefixMode::FileTree => {
                 if is_dir {
                     self.prefix.pop_back();
                     self.prefix.pop_back();
                     if is_next_last {
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::end_leaf).clone())
+                            .push_back(get_tree_prefix(TreePrefix::EndLeaf).clone())
                     } else {
                         self.prefix
-                            .push_back(get_tree_prefix(TreePrefix::leaf).clone())
+                            .push_back(get_tree_prefix(TreePrefix::Leaf).clone())
                     }
                 } else {
                     // no operation is needed here
                 }
             }
-            PrefixMode::none => {
+            PrefixMode::None => {
                 // no operation is needed here
             }
         }

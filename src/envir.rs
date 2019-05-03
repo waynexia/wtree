@@ -1,10 +1,11 @@
 use lazy_static::lazy_static;
 use std::env;
+use std::process::exit;
 use std::path::PathBuf;
 
 #[macro_use]
 lazy_static! {
-    static ref setting: Setting = parase_parameter();
+    static ref SETTING: Setting = parase_parameter();
 }
 
 pub struct Setting {
@@ -103,6 +104,15 @@ fn parase_parameter() -> Setting {
                 ret.pattern = pattern.to_string();
             }
 
+            "--help" => {
+                Setting::print_help();
+                exit(0);
+            }
+            "--version" => {
+                println!("wtree, version 0.2.0 by @waynexia");
+                exit(0);
+            }
+
             _ => Setting::error_report("Invalid argument: ".to_string() + i.as_ref()),
         }
         args_iter.next();
@@ -117,7 +127,7 @@ impl Setting {
 
         // print hint
         println!("{}", hint);
-        panic!();
+        exit(0);
     }
 
     fn print_help() {
@@ -191,69 +201,69 @@ usage: tree [-acdfghilnpqrstuvxACDFJQNSUX] [-H baseHREF] [-T title ]
 
 impl Setting {
     pub fn get_root() -> PathBuf {
-        setting.root.clone()
+        SETTING.root.clone()
     }
 
     pub fn get_root_prefix() -> PathBuf {
-        match setting.root.parent() {
+        match SETTING.root.parent() {
             Some(path) => path.to_path_buf().clone(),
             _ => PathBuf::from("/"),
         }
     }
 
     pub fn get_pattern() -> Option<(char, String, bool)> {
-        if !(setting.pattern_p || setting.pattern_i) {
+        if !(SETTING.pattern_p || SETTING.pattern_i) {
             return Option::None;
         } else {
             return Some((
-                if setting.pattern_p { 'p' } else { 'i' },
-                setting.pattern.clone(),
-                setting.pattern_ignore_case,
+                if SETTING.pattern_p { 'p' } else { 'i' },
+                SETTING.pattern.clone(),
+                SETTING.pattern_ignore_case,
             ));
         }
     }
 
     pub fn is_all() -> bool {
-        setting.is_all
+        SETTING.is_all
     }
 
     pub fn is_dir_only() -> bool {
-        setting.is_dir_only
+        SETTING.is_dir_only
     }
 
     pub fn is_quote() -> bool {
-        setting.is_quote
+        SETTING.is_quote
     }
 
     pub fn is_full_path() -> bool {
-        setting.is_full_path
+        SETTING.is_full_path
     }
 
     pub fn is_no_indentation() -> bool {
-        setting.is_no_indentation
+        SETTING.is_no_indentation
     }
 
     pub fn is_sort_alphanumerically() -> bool {
-        setting.is_sort_alphanumerically
+        SETTING.is_sort_alphanumerically
     }
 
     pub fn is_sort_mod_time() -> bool {
-        setting.is_sort_mod_time
+        SETTING.is_sort_mod_time
     }
 
     pub fn is_unsort() -> bool {
-        setting.is_unsort
+        SETTING.is_unsort
     }
 
     pub fn is_sort_reverse() -> bool {
-        setting.is_sort_reverse
+        SETTING.is_sort_reverse
     }
 
     pub fn is_dir_first() -> bool {
-        setting.is_dir_first
+        SETTING.is_dir_first
     }
 
     pub fn is_needing_report() -> bool {
-        setting.is_needing_report
+        SETTING.is_needing_report
     }
 }
