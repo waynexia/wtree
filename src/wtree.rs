@@ -41,18 +41,17 @@ pub fn print_tree() -> std::io::Result<()> {
     prefix.set_init_value("├── ".to_string());
     let root_entry = Entry::new(Setting::get_root());
     root_entry.print();
-    print_subdir(
-        &root_entry,
-        &mut prefix,
-        &mut counter,
-    )?;
+    print_subdir(&root_entry, &mut prefix, &mut counter)?;
     counter.print_counter();
 
     Ok(())
 }
 
 fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std::io::Result<()> {
-    let path_list = root.traverse()?;
+    let path_list = match root.traverse() {
+        Ok(list) => list,
+        Err(_) => return Ok(()),
+    };
 
     let file_num = path_list.len();
 

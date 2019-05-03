@@ -41,7 +41,9 @@ fn parase_parameter() -> Setting {
         }
     } else {
         PathBuf::from("./".to_string())
-    }.canonicalize().unwrap();
+    }
+    .canonicalize()
+    .unwrap();
 
     //println!("{:?}",root_path);
     //panic!();
@@ -192,10 +194,10 @@ impl Setting {
         setting.root.clone()
     }
 
-    pub fn get_root_prefix() ->PathBuf{
-        match setting.root.parent(){
+    pub fn get_root_prefix() -> PathBuf {
+        match setting.root.parent() {
             Some(path) => path.to_path_buf().clone(),
-            _ => PathBuf::from("/")
+            _ => PathBuf::from("/"),
         }
     }
 

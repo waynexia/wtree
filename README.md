@@ -110,3 +110,6 @@ a simple `tree` command
   - [ ] --help        Print usage and this help message and exit.
 
   - [ ] --            Options processing terminator.
+
+# bugs
+- files that cannot read metadata or cannot open will not take count and print

@@ -123,26 +123,43 @@ pub struct Entry {
     path_prefix: PathBuf,
     entry_name: String,
     metadata: Metadata,
+    is_empty: bool,// identify fake entry
 }
 
 impl Entry {
     pub fn new(path: PathBuf) -> Entry {
-        Entry {
-            is_dir: path.is_dir(),
-            is_visible: Entry::visible_or_not(
-                path.file_name()
-                    .expect(path.to_str().unwrap())
-                    .to_str()
-                    .unwrap(),
-            ),
-            path_prefix: {
-                path.strip_prefix(Setting::get_root_prefix())
-                    .unwrap()
-                    .to_path_buf()
-            },
-            entry_name: String::from(path.file_name().unwrap().to_str().unwrap()),
-            metadata: path.metadata().expect(path.to_str().unwrap()),
-            path,
+        if path.exists() {
+            Entry {
+                is_dir: path.is_dir(),
+                is_visible: Entry::visible_or_not(match path.file_name() {
+                    Some(path) => path.to_str().unwrap(),
+                    Option::None => "/",
+                }),
+                path_prefix: {
+                    path.strip_prefix(Setting::get_root_prefix())
+                        .unwrap()
+                        .to_path_buf()
+                },
+                entry_name: String::from(match path.file_name() {
+                    Some(path) => path.to_str().unwrap(),
+                    Option::None => "/",
+                }),
+                metadata: path.metadata().unwrap(),
+                path,
+                is_empty:false,
+            }
+        }
+        else{
+            // fake empty entry
+            Entry{
+                is_dir:false,
+                is_visible:false,
+                path_prefix:path.clone(),
+                path,
+                entry_name:"".to_string(),
+                metadata: fs::metadata("/").unwrap(),
+                is_empty:true,
+            }
         }
     }
 
@@ -163,10 +180,6 @@ impl Entry {
         self.is_dir
     }
 
-    pub fn is_visible(&self) -> bool {
-        self.is_visible
-    }
-
     pub fn traverse(&self) -> Result<Vec<Entry>, std::io::Error> {
         // check
         if !self.is_dir {
@@ -177,15 +190,24 @@ impl Entry {
         }
 
         // make entry list
-        let mut path_list: Vec<Entry> = fs::read_dir(&self.path)?
-            .map(|item| -> Entry {
-                match item {
-                    Ok(sth) => Entry::new(sth.path()),
-                    _ => Entry::new(PathBuf::new()), // not correct, need to return error
+        let mut path_list: Vec<Entry> = match fs::read_dir(&self.path) {
+            Ok(list) => list,
+            Err(e) => return Err(e),
+        }
+        .map(|item| -> Entry {
+            match item {
+                Ok(sth) => {
+                    if sth.path().exists() {
+                        Entry::new(sth.path())
+                    } else {
+                        Entry::new(PathBuf::new())
+                    }
                 }
-            })
-            .filter(Entry::filter)
-            .collect();
+                _ => Entry::new(PathBuf::new()), // not correct, need to return error
+            }
+        })
+        .filter(Entry::filter)
+        .collect();
 
         if Setting::is_unsort() {
             return Ok(path_list);
@@ -211,6 +233,11 @@ impl Entry {
     }
 
     fn filter(item: &Entry) -> bool {
+        // delete not exist file
+        if item.is_empty {
+            return false;
+        }
+
         // -a
         if !Setting::is_all() && !item.is_visible {
             return false;
@@ -267,7 +294,7 @@ impl Entry {
             Ok(time) => time,
             Err(_e) => SystemTime::now(),
         };
-        let b_time = match a.metadata.modified() {
+        let b_time = match b.metadata.modified() {
             Ok(time) => time,
             Err(_e) => SystemTime::now(),
         };
