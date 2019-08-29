@@ -1,10 +1,9 @@
 use crate::envir::Setting;
-use crate::print::*;
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fs;
 use std::fs::Metadata;
-use std::path::{ PathBuf};
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 enum PrefixMode {
@@ -122,8 +121,8 @@ pub struct Entry {
     is_visible: bool,
     path_prefix: PathBuf,
     entry_name: String,
-    metadata: Metadata,
-    is_empty: bool,// identify fake entry
+    pub metadata: Metadata,
+    is_empty: bool, // identify fake entry
 }
 
 impl Entry {
@@ -146,19 +145,18 @@ impl Entry {
                 }),
                 metadata: path.metadata().unwrap(),
                 path,
-                is_empty:false,
+                is_empty: false,
             }
-        }
-        else{
+        } else {
             // fake empty entry
-            Entry{
-                is_dir:false,
-                is_visible:false,
-                path_prefix:path.clone(),
+            Entry {
+                is_dir: false,
+                is_visible: false,
+                path_prefix: path.clone(),
                 path,
-                entry_name:"".to_string(),
+                entry_name: "".to_string(),
                 metadata: fs::metadata("/").unwrap(),
-                is_empty:true,
+                is_empty: true,
             }
         }
     }

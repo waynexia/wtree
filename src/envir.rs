@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use std::env;
-use std::process::exit;
 use std::path::PathBuf;
+use std::process::exit;
 
 #[macro_use]
 lazy_static! {

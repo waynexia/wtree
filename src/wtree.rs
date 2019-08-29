@@ -1,9 +1,7 @@
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
-
 use crate::utils::*;
 extern crate lazy_static;
 use crate::envir::Setting;
+use crate::print::send;
 
 struct Counter {
     file_count: u32,
@@ -38,9 +36,9 @@ impl Counter {
 pub fn print_tree() -> std::io::Result<()> {
     let mut counter = Counter::new();
     let mut prefix = Prefix::new();
-    prefix.set_init_value("├── ".to_string());
     let root_entry = Entry::new(Setting::get_root());
-    root_entry.print();
+    send(&prefix, &root_entry);
+    prefix.set_init_value("├── ".to_string());
     print_subdir(&root_entry, &mut prefix, &mut counter)?;
     counter.print_counter();
 
@@ -62,8 +60,7 @@ fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std
         // identify the last item
         prefix.add_prefix(iter_cnt == 1, iter_cnt == file_num, false);
 
-        prefix.print();
-        path.print();
+        send(&prefix, &path);
         counter.increase_counter(path.is_dir());
 
         // is dir
@@ -79,8 +76,4 @@ fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std
     }
 
     Ok(())
-}
-
-fn is_file_executable(metadata: fs::Metadata) -> bool {
-    metadata.permissions().mode() & 0o111 != 0
 }
