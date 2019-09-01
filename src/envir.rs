@@ -23,6 +23,7 @@ pub struct Setting {
     pub is_quote: bool,
     pub is_full_path: bool,
     pub pattern_ignore_case: bool,
+    pub is_color: bool, // -n, -C
 
     pub pattern: String,
     pub root: PathBuf,
@@ -60,6 +61,7 @@ fn parase_parameter() -> Setting {
         is_dir_first: false,
         is_needing_report: true,
         is_quote: false,
+        is_color: false,
         is_full_path: false,
         pattern_i: false,
         pattern_p: false,
@@ -85,6 +87,8 @@ fn parase_parameter() -> Setting {
             "--ignore-case" => ret.pattern_ignore_case = true,
             "-Q" => ret.is_quote = true,
             "-f" => ret.is_full_path = true,
+            // -n will be overwrite, no reaction
+            "-C" => ret.is_color = true,
             "-P" => {
                 ret.pattern_p = true;
                 // only can exist one pattern
@@ -223,6 +227,8 @@ impl Setting {
         }
     }
 
+    /* todo: remove this hellll */
+
     pub fn is_all() -> bool {
         SETTING.is_all
     }
@@ -265,5 +271,9 @@ impl Setting {
 
     pub fn is_needing_report() -> bool {
         SETTING.is_needing_report
+    }
+
+    pub fn is_color() -> bool {
+        SETTING.is_color
     }
 }

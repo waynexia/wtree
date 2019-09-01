@@ -1,3 +1,4 @@
+use crate::envir::Setting;
 use crate::utils::{Entry, Prefix};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -43,10 +44,12 @@ fn is_file_executable(metadata: &fs::Metadata) -> bool {
 pub fn send(prefix: &Prefix, entry: &Entry) {
     prefix.print();
     /* todo: use bit flag */
-    if entry.is_dir() {
-        set_blue();
-    } else if is_file_executable(&entry.metadata) {
-        set_green();
+    if Setting::is_color() {
+        if entry.is_dir() {
+            set_blue();
+        } else if is_file_executable(&entry.metadata) {
+            set_green();
+        }
     }
     entry.print();
     reset();
