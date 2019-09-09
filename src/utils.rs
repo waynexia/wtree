@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fs;
 use std::fs::Metadata;
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::path::PathBuf;
 use std::time::SystemTime;
 
@@ -302,44 +302,92 @@ impl Entry {
 }
 
 pub struct EntryAttr {
-    protection: String,
+    content: String,
 }
 
 impl EntryAttr {
     pub fn new(metadata: &Metadata) -> EntryAttr {
-        let perm = EntryAttr::setup_protection(metadata);
+        let mut cont = String::new();
+        EntryAttr::setup_protection(metadata, &mut cont);
+        EntryAttr::setup_uid(metadata, &mut cont);
+        EntryAttr::setup_size(metadata, &mut cont);
+        EntryAttr::setup_time(metadata, &mut cont);
+        EntryAttr::setup_inode(metadata, &mut cont);
+        EntryAttr::setup_device(metadata, &mut cont);
 
-        EntryAttr { protection: perm }
+        EntryAttr { content: cont }
     }
 
     pub fn print(&self) {
-        print!(" {:?} ", self.protection);
+        print!("[{:}] ", self.content);
     }
 
-    fn setup_protection(metadata: &Metadata) -> String {
+    fn setup_protection(metadata: &Metadata, content: &mut String) {
         let flags_bit = vec![
-            0b100_000_000,
-            0b010_000_000,
-            0b001_000_000,
-            0b000_100_000,
-            0b000_010_000,
-            0b000_001_000,
-            0b000_000_100,
-            0b000_000_010,
-            0b000_000_001,
+            0b0100_000_000,
+            0b0010_000_000,
+            0b0001_000_000,
+            0b0000_100_000,
+            0b0000_010_000,
+            0b0000_001_000,
+            0b0000_000_100,
+            0b0000_000_010,
+            0b0000_000_001,
         ];
         let mode = metadata.permissions().mode();
         let flags_char = "rwxrwxrwx";
 
         let mut protection = String::from(if metadata.is_dir() { "d" } else { "-" });
 
-        for i in 0..8 {
+        for i in 0..9 {
             if mode & flags_bit[i] == 0 {
                 protection.push('-');
             } else {
                 protection.push(flags_char.chars().nth(i).unwrap());
             }
         }
-        protection
+        content.push_str(&protection);
+    }
+
+    fn setup_uid(metadata: &Metadata, content: &mut String) {
+        content.push_str(&format!(" {:}", metadata.uid()))
+    }
+
+    fn setup_gid(metadata: &Metadata, content: &mut String) {
+        content.push_str(&format!(" {:}", metadata.gid()))
+    }
+
+    fn setup_size(metadata: &Metadata, content: &mut String) {
+        let raw_size = metadata.size();
+
+        // content.push_str(&format!(" {:}" , raw_size));
+        content.push_str(&EntryAttr::convert_size(raw_size, 1024));
+    }
+
+    /*
+        show it in UNIX timestamp style.
+    */
+    fn setup_time(metadata: &Metadata, content: &mut String) {
+        content.push_str(&format!(" {:}", metadata.ctime()))
+    }
+
+    fn setup_inode(metadata: &Metadata, content: &mut String) {
+        content.push_str(&format!(" {:}", metadata.ino()))
+    }
+
+    fn setup_device(metadata: &Metadata, content: &mut String) {
+        content.push_str(&format!(" {:}", metadata.dev()))
+    }
+
+    fn convert_size(raw_size: u64, base: u16) -> String {
+        let unit = vec!["B", "K", "M", "G", "T", "P"];
+        let mut size: f64 = raw_size as f64;
+        let mut count: usize = 0;
+        while size > base.into() {
+            size /= base as f64;
+            count += 1;
+        }
+        size = (size * 10.0).round() / 10.0;
+        format!(" {:4}{}", size, unit[count])
     }
 }
