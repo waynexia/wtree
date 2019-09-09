@@ -1,5 +1,5 @@
 use crate::envir::Setting;
-use crate::utils::{Entry, Prefix};
+use crate::utils::{Entry, EntryAttr, Prefix};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 
@@ -43,6 +43,10 @@ fn is_file_executable(metadata: &fs::Metadata) -> bool {
 
 pub fn send(prefix: &Prefix, entry: &Entry) {
     prefix.print();
+
+    let entry_attr = EntryAttr::new(&entry.metadata);
+    entry_attr.print();
+
     /* todo: use bit flag */
     if Setting::is_color() {
         if entry.is_dir() {

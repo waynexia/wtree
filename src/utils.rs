@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fs;
 use std::fs::Metadata;
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
@@ -297,5 +298,48 @@ impl Entry {
             Err(_e) => SystemTime::now(),
         };
         a_time.cmp(&b_time)
+    }
+}
+
+pub struct EntryAttr {
+    protection: String,
+}
+
+impl EntryAttr {
+    pub fn new(metadata: &Metadata) -> EntryAttr {
+        let perm = EntryAttr::setup_protection(metadata);
+
+        EntryAttr { protection: perm }
+    }
+
+    pub fn print(&self) {
+        print!(" {:?} ", self.protection);
+    }
+
+    fn setup_protection(metadata: &Metadata) -> String {
+        let flags_bit = vec![
+            0b100_000_000,
+            0b010_000_000,
+            0b001_000_000,
+            0b000_100_000,
+            0b000_010_000,
+            0b000_001_000,
+            0b000_000_100,
+            0b000_000_010,
+            0b000_000_001,
+        ];
+        let mode = metadata.permissions().mode();
+        let flags_char = "rwxrwxrwx";
+
+        let mut protection = String::from(if metadata.is_dir() { "d" } else { "-" });
+
+        for i in 0..8 {
+            if mode & flags_bit[i] == 0 {
+                protection.push('-');
+            } else {
+                protection.push(flags_char.chars().nth(i).unwrap());
+            }
+        }
+        protection
     }
 }
