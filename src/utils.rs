@@ -123,7 +123,6 @@ pub struct Entry {
     is_visible: bool,
     path_prefix: PathBuf,
     entry_name: String,
-    pub metadata: Metadata,
     is_empty: bool, // identify fake entry
 }
 
@@ -145,7 +144,6 @@ impl Entry {
                     Some(path) => path.to_str().unwrap(),
                     Option::None => "/",
                 }),
-                metadata: path.metadata().unwrap(),
                 path,
                 is_empty: false,
             }
@@ -157,9 +155,17 @@ impl Entry {
                 path_prefix: path.clone(),
                 path,
                 entry_name: "".to_string(),
-                metadata: fs::metadata("/").unwrap(),
                 is_empty: true,
             }
+        }
+    }
+
+    pub fn get_metadata(&self)->Metadata{
+        if self.path.exists(){
+            self.path.metadata().unwrap()
+        }
+        else{
+            fs::metadata("/").unwrap()
         }
     }
 
@@ -277,11 +283,11 @@ impl Entry {
     }
 
     fn sort_by_modified_time(a: &Entry, b: &Entry) -> Ordering {
-        let a_time = match a.metadata.modified() {
+        let a_time = match a.get_metadata().modified() {
             Ok(time) => time,
             Err(_e) => SystemTime::now(),
         };
-        let b_time = match b.metadata.modified() {
+        let b_time = match b.get_metadata().modified() {
             Ok(time) => time,
             Err(_e) => SystemTime::now(),
         };

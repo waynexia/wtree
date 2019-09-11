@@ -57,7 +57,7 @@ pub fn send(prefix: &Prefix, entry: &Entry) {
 
     // print attributes
     if need_print_attr() {
-        let entry_attr = EntryAttr::new(&entry.metadata);
+        let entry_attr = EntryAttr::new(&entry.get_metadata());
         entry_attr.print();
     }
 
@@ -66,7 +66,7 @@ pub fn send(prefix: &Prefix, entry: &Entry) {
     if SETTING.is_color {
         if entry.is_dir() {
             set_blue();
-        } else if is_file_executable(&entry.metadata) {
+        } else if is_file_executable(&entry.get_metadata()) {
             set_green();
         }
     }
