@@ -111,5 +111,7 @@ a simple `tree` command
 
   - [ ] --            Options processing terminator.
 
-# bugs
-- files that cannot read metadata or cannot open will not take count and print
+# different behavior
+- time is printed in Unix timestamp style
+- pattern matching
+- color
