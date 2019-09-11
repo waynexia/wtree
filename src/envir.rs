@@ -293,7 +293,6 @@ fn parse_parameter() -> Setting {
 
             _ => Setting::error_report("Invalid argument: ".to_string() + i.as_ref()),
         }
-        args_iter.next();
     }
 
     ret
