@@ -1,6 +1,6 @@
 use crate::utils::*;
 extern crate lazy_static;
-use crate::envir::{Setting,SETTING};
+use crate::envir::{Setting, SETTING};
 use crate::print::send;
 
 struct Counter {

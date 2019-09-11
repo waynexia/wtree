@@ -84,8 +84,12 @@ impl Setting {
             return Option::None;
         } else {
             return Some((
-                if SETTING.pattern_p { 'p' } else { 'i' },
-                SETTING.pattern.clone(),
+                if SETTING.pattern_p { 'P' } else { 'I' },
+                if SETTING.pattern_ignore_case {
+                    SETTING.pattern.to_lowercase()
+                } else {
+                    SETTING.pattern.clone()
+                },
                 SETTING.pattern_ignore_case,
             ));
         }
@@ -292,7 +296,7 @@ fn parse_parameter() -> Setting {
                 if ret.pattern_p && ret.pattern_i {
                     ret.pattern_i = false;
                 }
-                let pattern: &str = args_iter.peek().expect("need a pattern here");
+                let pattern: &str = args_iter.next().expect("need a pattern here");
                 ret.pattern = pattern.to_string();
             }
             "I" => {
@@ -301,7 +305,7 @@ fn parse_parameter() -> Setting {
                 if ret.pattern_p && ret.pattern_i {
                     ret.pattern_p = false;
                 }
-                let pattern: &str = args_iter.peek().expect("need a pattern here");
+                let pattern: &str = args_iter.next().expect("need a pattern here");
                 ret.pattern = pattern.to_string();
             }
 

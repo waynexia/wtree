@@ -1,4 +1,4 @@
-use crate::envir::{Setting,SETTING};
+use crate::envir::{Setting, SETTING};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fs;
@@ -116,6 +116,7 @@ impl Prefix {
     }
 }
 
+#[derive(Debug)]
 pub struct Entry {
     path: PathBuf,
     is_dir: bool,
@@ -211,20 +212,16 @@ impl Entry {
         if SETTING.is_unsort {
             return Ok(path_list);
         }
-
         if SETTING.is_dir_first {
             path_list.sort_by(Entry::dir_first)
         }
-
         if SETTING.is_sort_alphanumerically {
             path_list.sort_by_key(|entry| entry.entry_name.clone())
         }
-
         if SETTING.is_sort_mod_time {
             path_list.sort_by(Entry::sort_by_modified_time);
         }
-
-        if SETTING.is_sort_reverse{
+        if SETTING.is_sort_reverse {
             path_list.reverse();
         }
 
@@ -232,7 +229,7 @@ impl Entry {
     }
 
     fn filter(item: &Entry) -> bool {
-        // delete not exist file
+        // delete file that not exist
         if item.is_empty {
             return false;
         }
@@ -249,20 +246,11 @@ impl Entry {
 
         // pattern (-I or -P)
         if let Some((method, pattern, ignore_case)) = Setting::get_pattern() {
-            let entry_name = if ignore_case {
-                item.entry_name.to_lowercase()
+            if ignore_case {
+                return (method == 'I') ^ (item.entry_name.find(pattern.as_str()) == Option::None);
             } else {
-                item.entry_name.clone()
-            };
-            let p = if ignore_case {
-                pattern.to_lowercase()
-            } else {
-                pattern
-            };
-            if method == 'i' {
-                return entry_name.find(p.as_str()) == Option::None;
-            } else {
-                return entry_name.find(p.as_str()) != Option::None;
+                return (method == 'I')
+                    ^ (item.entry_name.to_lowercase().find(pattern.as_str()) == Option::None);
             }
         }
 
@@ -308,7 +296,7 @@ pub struct EntryAttr {
 impl EntryAttr {
     pub fn new(metadata: &Metadata) -> EntryAttr {
         let mut cont = String::new();
-        if SETTING.need_protection{
+        if SETTING.need_protection {
             EntryAttr::setup_protection(metadata, &mut cont);
         }
         if SETTING.need_uid {
