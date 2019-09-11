@@ -44,25 +44,25 @@ a simple `tree` command
 
   - [x] -Q            Quote filenames with double quotes.
 
-  - [ ] -p            Print the protections for each file.
+  - [x] -p            Print the protections for each file.
 
-  - [ ] -u            Displays file owner or UID number.
+  - [x] -u            Displays file owner or UID number.
 
-  - [ ] -g            Displays file group owner or GID number.
+  - [x] -g            Displays file group owner or GID number.
 
-  - [ ] -s            Print the size in bytes of each file.
+  - [x] -s            Print the size in bytes of each file.
 
-  - [ ] -h            Print the size in a more human readable way.
+  - [x] -h            Print the size in a more human readable way.
 
-  - [ ] --si          Like -h, but use in SI units (powers of 1000).
+  - [x] --si          Like -h, but use in SI units (powers of 1000).
 
-  - [ ] -D            Print the date of last modification or (-c) status change.
+  - [x] -D            Print the date of last modification or (-c) status change.
 
   - [ ] -F            Appends '/', '=', '*', '@', '|' or '>' as per ls -F.
 
-  - [ ] --inodes      Print inode number of each file.
+  - [x] --inodes      Print inode number of each file.
 
-  - [ ] --device      Print device ID number to which each file belongs.
+  - [x] --device      Print device ID number to which each file belongs.
 
 - ## Sorting options
   - [x] -v            Sort files alphanumerically by version.
@@ -86,9 +86,9 @@ a simple `tree` command
 
   - [ ] -S            Print with CP437 (console) graphics indentation lines.
 
-  - [ ] -n            Turn colorization off always (-C overrides).
+  - [x] -n            Turn colorization off always (-C overrides).
 
-  - [ ] -C            Turn colorization on always.
+  - [x] -C            Turn colorization on always.
 
 - ## XML/HTML/JSON options
   - [ ] -X            Prints out an XML representation of the tree.

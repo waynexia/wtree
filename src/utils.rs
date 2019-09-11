@@ -308,12 +308,27 @@ pub struct EntryAttr {
 impl EntryAttr {
     pub fn new(metadata: &Metadata) -> EntryAttr {
         let mut cont = String::new();
-        EntryAttr::setup_protection(metadata, &mut cont);
-        EntryAttr::setup_uid(metadata, &mut cont);
-        EntryAttr::setup_size(metadata, &mut cont);
-        EntryAttr::setup_time(metadata, &mut cont);
-        EntryAttr::setup_inode(metadata, &mut cont);
-        EntryAttr::setup_device(metadata, &mut cont);
+        if Setting::need_protection() {
+            EntryAttr::setup_protection(metadata, &mut cont);
+        }
+        if Setting::need_uid() {
+            EntryAttr::setup_uid(metadata, &mut cont);
+        }
+        if Setting::need_gid() {
+            EntryAttr::setup_gid(metadata, &mut cont);
+        }
+        if Setting::need_size() != 0 {
+            EntryAttr::setup_size(metadata, &mut cont);
+        }
+        if Setting::need_ctime() {
+            EntryAttr::setup_time(metadata, &mut cont);
+        }
+        if Setting::need_inode() {
+            EntryAttr::setup_inode(metadata, &mut cont);
+        }
+        if Setting::need_device() {
+            EntryAttr::setup_device(metadata, &mut cont);
+        }
 
         EntryAttr { content: cont }
     }
@@ -359,9 +374,12 @@ impl EntryAttr {
 
     fn setup_size(metadata: &Metadata, content: &mut String) {
         let raw_size = metadata.size();
-
-        // content.push_str(&format!(" {:}" , raw_size));
-        content.push_str(&EntryAttr::convert_size(raw_size, 1024));
+        match Setting::need_size() {
+            1 => content.push_str(&format!(" {:}", raw_size)),
+            2 => content.push_str(&EntryAttr::convert_size(raw_size, 1024)),
+            3 => content.push_str(&EntryAttr::convert_size(raw_size, 1000)),
+            _ => panic!(),
+        }
     }
 
     /*

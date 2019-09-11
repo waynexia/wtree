@@ -23,7 +23,14 @@ pub struct Setting {
     pub is_quote: bool,
     pub is_full_path: bool,
     pub pattern_ignore_case: bool,
-    pub is_color: bool, // -n, -C
+    pub is_color: bool,        // -n, -C
+    pub need_protection: bool, // -p
+    pub need_uid: bool,        // -u
+    pub need_gid: bool,        // -g
+    pub need_size: u8,         // -s, -h, --si
+    pub need_ctime: bool,      // -D
+    pub need_inode: bool,      // --inodes
+    pub need_device: bool,     // --device
 
     pub pattern: String,
     pub root: PathBuf,
@@ -66,6 +73,13 @@ fn parase_parameter() -> Setting {
         pattern_i: false,
         pattern_p: false,
         pattern_ignore_case: false,
+        need_protection: false,
+        need_uid: false,
+        need_gid: false,
+        need_size: 0,
+        need_ctime: false,
+        need_inode: false,
+        need_device: false,
         pattern: "".to_string(),
 
         root: root_path.canonicalize().unwrap(),
@@ -89,6 +103,16 @@ fn parase_parameter() -> Setting {
             "-f" => ret.is_full_path = true,
             // -n will be overwrite, no reaction
             "-C" => ret.is_color = true,
+            "-p" => ret.need_protection = true,
+            "-u" => ret.need_uid = true,
+            "-g" => ret.need_gid = true,
+            "-D" => ret.need_ctime = true,
+            "--inode" => ret.need_inode = true,
+            "--device" => ret.need_device = true,
+            // -s, -h, --si will override others
+            "-s" => ret.need_size = 1,
+            "-h" => ret.need_size = 2,
+            "--si" => ret.need_size = 3,
             "-P" => {
                 ret.pattern_p = true;
                 // only can exist one pattern
@@ -275,5 +299,33 @@ impl Setting {
 
     pub fn is_color() -> bool {
         SETTING.is_color
+    }
+
+    pub fn need_protection() -> bool {
+        SETTING.need_protection
+    }
+
+    pub fn need_uid() -> bool {
+        SETTING.need_uid
+    }
+
+    pub fn need_gid() -> bool {
+        SETTING.need_gid
+    }
+
+    pub fn need_size() -> u8 {
+        SETTING.need_size
+    }
+
+    pub fn need_ctime() -> bool {
+        SETTING.need_ctime
+    }
+
+    pub fn need_inode() -> bool {
+        SETTING.need_inode
+    }
+
+    pub fn need_device() -> bool {
+        SETTING.need_device
     }
 }

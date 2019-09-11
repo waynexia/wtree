@@ -41,12 +41,27 @@ fn is_file_executable(metadata: &fs::Metadata) -> bool {
     metadata.permissions().mode() & 0o111 != 0
 }
 
+fn need_print_attr() -> bool {
+    Setting::need_protection()
+        || Setting::need_uid()
+        || Setting::need_gid()
+        || Setting::need_size() != 0
+        || Setting::need_ctime()
+        || Setting::need_inode()
+        || Setting::need_device()
+}
+
 pub fn send(prefix: &Prefix, entry: &Entry) {
+    // print prefix
     prefix.print();
 
-    let entry_attr = EntryAttr::new(&entry.metadata);
-    entry_attr.print();
+    // print attributes
+    if need_print_attr() {
+        let entry_attr = EntryAttr::new(&entry.metadata);
+        entry_attr.print();
+    }
 
+    // print entry
     /* todo: use bit flag */
     if Setting::is_color() {
         if entry.is_dir() {
