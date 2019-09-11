@@ -1,6 +1,6 @@
 use crate::utils::*;
 extern crate lazy_static;
-use crate::envir::Setting;
+use crate::envir::{Setting,SETTING};
 use crate::print::send;
 
 struct Counter {
@@ -24,7 +24,7 @@ impl Counter {
     }
 
     pub fn print_counter(&self) {
-        if Setting::is_needing_report() {
+        if SETTING.is_needing_report {
             println!(
                 "\n{} directories, {} files",
                 self.dir_count, self.file_count,

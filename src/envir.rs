@@ -5,7 +5,7 @@ use std::process::exit;
 
 #[macro_use]
 lazy_static! {
-    static ref SETTING: Setting = parse_parameter();
+    pub static ref SETTING: Setting = parse_parameter();
 }
 
 pub struct Setting {
@@ -68,6 +68,29 @@ impl Default for Setting {
 }
 
 impl Setting {
+    pub fn get_root() -> PathBuf {
+        SETTING.root.clone()
+    }
+
+    pub fn get_root_prefix() -> PathBuf {
+        match SETTING.root.parent() {
+            Some(path) => path.to_path_buf().clone(),
+            _ => PathBuf::from("/"),
+        }
+    }
+
+    pub fn get_pattern() -> Option<(char, String, bool)> {
+        if !(SETTING.pattern_p || SETTING.pattern_i) {
+            return Option::None;
+        } else {
+            return Some((
+                if SETTING.pattern_p { 'p' } else { 'i' },
+                SETTING.pattern.clone(),
+                SETTING.pattern_ignore_case,
+            ));
+        }
+    }
+
     fn error_report(hint: String) {
         Setting::print_help();
 
@@ -296,109 +319,6 @@ fn parse_parameter() -> Setting {
     }
 
     ret
-}
-
-impl Setting {
-    pub fn get_root() -> PathBuf {
-        SETTING.root.clone()
-    }
-
-    pub fn get_root_prefix() -> PathBuf {
-        match SETTING.root.parent() {
-            Some(path) => path.to_path_buf().clone(),
-            _ => PathBuf::from("/"),
-        }
-    }
-
-    pub fn get_pattern() -> Option<(char, String, bool)> {
-        if !(SETTING.pattern_p || SETTING.pattern_i) {
-            return Option::None;
-        } else {
-            return Some((
-                if SETTING.pattern_p { 'p' } else { 'i' },
-                SETTING.pattern.clone(),
-                SETTING.pattern_ignore_case,
-            ));
-        }
-    }
-
-    /* todo: remove this hellll */
-
-    pub fn is_all() -> bool {
-        SETTING.is_all
-    }
-
-    pub fn is_dir_only() -> bool {
-        SETTING.is_dir_only
-    }
-
-    pub fn is_quote() -> bool {
-        SETTING.is_quote
-    }
-
-    pub fn is_full_path() -> bool {
-        SETTING.is_full_path
-    }
-
-    pub fn is_no_indentation() -> bool {
-        SETTING.is_no_indentation
-    }
-
-    pub fn is_sort_alphanumerically() -> bool {
-        SETTING.is_sort_alphanumerically
-    }
-
-    pub fn is_sort_mod_time() -> bool {
-        SETTING.is_sort_mod_time
-    }
-
-    pub fn is_unsort() -> bool {
-        SETTING.is_unsort
-    }
-
-    pub fn is_sort_reverse() -> bool {
-        SETTING.is_sort_reverse
-    }
-
-    pub fn is_dir_first() -> bool {
-        SETTING.is_dir_first
-    }
-
-    pub fn is_needing_report() -> bool {
-        SETTING.is_needing_report
-    }
-
-    pub fn is_color() -> bool {
-        SETTING.is_color
-    }
-
-    pub fn need_protection() -> bool {
-        SETTING.need_protection
-    }
-
-    pub fn need_uid() -> bool {
-        SETTING.need_uid
-    }
-
-    pub fn need_gid() -> bool {
-        SETTING.need_gid
-    }
-
-    pub fn need_size() -> u8 {
-        SETTING.need_size
-    }
-
-    pub fn need_ctime() -> bool {
-        SETTING.need_ctime
-    }
-
-    pub fn need_inode() -> bool {
-        SETTING.need_inode
-    }
-
-    pub fn need_device() -> bool {
-        SETTING.need_device
-    }
 }
 
 #[test]

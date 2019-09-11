@@ -1,4 +1,4 @@
-use crate::envir::Setting;
+use crate::envir::{Setting,SETTING};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::fs;
@@ -37,7 +37,7 @@ impl Prefix {
     pub fn new() -> Prefix {
         Prefix {
             prefix: VecDeque::new(),
-            mode: if Setting::is_no_indentation() {
+            mode: if SETTING.is_no_indentation {
                 PrefixMode::None
             } else {
                 PrefixMode::FileTree
@@ -164,11 +164,11 @@ impl Entry {
 
     pub fn print(&self) {
         let mut entry_name_to_print = self.entry_name.clone();
-        if Setting::is_full_path() {
+        if SETTING.is_full_path {
             entry_name_to_print
                 .insert_str(0, self.path_prefix.to_str().expect("not utf-8 filename"));
         }
-        if Setting::is_quote() {
+        if SETTING.is_quote {
             println!("{:?}", entry_name_to_print);
         } else {
             println!("{}", entry_name_to_print);
@@ -208,23 +208,23 @@ impl Entry {
         .filter(Entry::filter)
         .collect();
 
-        if Setting::is_unsort() {
+        if SETTING.is_unsort {
             return Ok(path_list);
         }
 
-        if Setting::is_dir_first() {
+        if SETTING.is_dir_first {
             path_list.sort_by(Entry::dir_first)
         }
 
-        if Setting::is_sort_alphanumerically() {
+        if SETTING.is_sort_alphanumerically {
             path_list.sort_by_key(|entry| entry.entry_name.clone())
         }
 
-        if Setting::is_sort_mod_time() {
+        if SETTING.is_sort_mod_time {
             path_list.sort_by(Entry::sort_by_modified_time);
         }
 
-        if Setting::is_sort_reverse() {
+        if SETTING.is_sort_reverse{
             path_list.reverse();
         }
 
@@ -238,12 +238,12 @@ impl Entry {
         }
 
         // -a
-        if !Setting::is_all() && !item.is_visible {
+        if !SETTING.is_all && !item.is_visible {
             return false;
         }
 
         // -d
-        if Setting::is_dir_only() && !item.is_dir {
+        if SETTING.is_dir_only && !item.is_dir {
             return false;
         }
 
@@ -308,25 +308,25 @@ pub struct EntryAttr {
 impl EntryAttr {
     pub fn new(metadata: &Metadata) -> EntryAttr {
         let mut cont = String::new();
-        if Setting::need_protection() {
+        if SETTING.need_protection{
             EntryAttr::setup_protection(metadata, &mut cont);
         }
-        if Setting::need_uid() {
+        if SETTING.need_uid {
             EntryAttr::setup_uid(metadata, &mut cont);
         }
-        if Setting::need_gid() {
+        if SETTING.need_gid {
             EntryAttr::setup_gid(metadata, &mut cont);
         }
-        if Setting::need_size() != 0 {
+        if SETTING.need_size != 0 {
             EntryAttr::setup_size(metadata, &mut cont);
         }
-        if Setting::need_ctime() {
+        if SETTING.need_ctime {
             EntryAttr::setup_time(metadata, &mut cont);
         }
-        if Setting::need_inode() {
+        if SETTING.need_inode {
             EntryAttr::setup_inode(metadata, &mut cont);
         }
-        if Setting::need_device() {
+        if SETTING.need_device {
             EntryAttr::setup_device(metadata, &mut cont);
         }
 
@@ -374,7 +374,7 @@ impl EntryAttr {
 
     fn setup_size(metadata: &Metadata, content: &mut String) {
         let raw_size = metadata.size();
-        match Setting::need_size() {
+        match SETTING.need_size {
             1 => content.push_str(&format!(" {:}", raw_size)),
             2 => content.push_str(&EntryAttr::convert_size(raw_size, 1024)),
             3 => content.push_str(&EntryAttr::convert_size(raw_size, 1000)),

@@ -1,4 +1,4 @@
-use crate::envir::Setting;
+use crate::envir::SETTING;
 use crate::utils::{Entry, EntryAttr, Prefix};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -42,13 +42,13 @@ fn is_file_executable(metadata: &fs::Metadata) -> bool {
 }
 
 fn need_print_attr() -> bool {
-    Setting::need_protection()
-        || Setting::need_uid()
-        || Setting::need_gid()
-        || Setting::need_size() != 0
-        || Setting::need_ctime()
-        || Setting::need_inode()
-        || Setting::need_device()
+    SETTING.need_protection
+        || SETTING.need_uid
+        || SETTING.need_gid
+        || SETTING.need_size != 0
+        || SETTING.need_ctime
+        || SETTING.need_inode
+        || SETTING.need_device
 }
 
 pub fn send(prefix: &Prefix, entry: &Entry) {
@@ -63,7 +63,7 @@ pub fn send(prefix: &Prefix, entry: &Entry) {
 
     // print entry
     /* todo: use bit flag */
-    if Setting::is_color() {
+    if SETTING.is_color {
         if entry.is_dir() {
             set_blue();
         } else if is_file_executable(&entry.metadata) {
