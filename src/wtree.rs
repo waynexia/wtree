@@ -39,13 +39,16 @@ pub fn print_tree() -> std::io::Result<()> {
     let root_entry = Entry::new(Setting::get_root());
     send(&prefix, &root_entry);
     prefix.set_init_value("├── ".to_string());
-    print_subdir(&root_entry, &mut prefix, &mut counter)?;
+    print_subdir(&root_entry, &mut prefix, &mut counter,Setting::get_level())?;
     counter.print_counter();
 
     Ok(())
 }
 
-fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std::io::Result<()> {
+fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter, level_limit: i32) -> std::io::Result<()> {
+    if level_limit == 0{
+        return Ok(())
+    }
     let path_list = match root.traverse() {
         Ok(list) => list,
         Err(_) => return Ok(()),
@@ -68,7 +71,7 @@ fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter) -> std
             prefix.add_prefix(false, iter_cnt == file_num, true);
 
             // recursive
-            print_subdir(&path, prefix, counter)?;
+            print_subdir(&path, prefix, counter, level_limit - 1)?;
 
             // recover prefix
             prefix.remove_prefix(iter_cnt + 1 == file_num, true);

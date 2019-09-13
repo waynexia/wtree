@@ -31,8 +31,10 @@ pub struct Setting {
     pub need_ctime: bool,      // -D
     pub need_inode: bool,      // --inodes
     pub need_device: bool,     // --device
+    pub is_level_limited: bool, // -L
 
     pub pattern: String,
+    pub level: String,
     pub root: PathBuf,
 }
 
@@ -61,7 +63,9 @@ impl Default for Setting {
             need_ctime: false,
             need_inode: false,
             need_device: false,
+            is_level_limited: false,
             pattern: String::new(),
+            level: String::new(),
             root: PathBuf::new(),
         }
     }
@@ -93,6 +97,13 @@ impl Setting {
                 SETTING.pattern_ignore_case,
             ));
         }
+    }
+
+    pub fn get_level() -> i32{
+        if SETTING.is_level_limited == false{
+            return -1;
+        }
+        return SETTING.level.parse::<i32>().expect("invalid number for after -L")
     }
 
     fn error_report(hint: String) {
@@ -307,6 +318,11 @@ fn parse_parameter() -> Setting {
                 }
                 let pattern: &str = args_iter.next().expect("need a pattern here");
                 ret.pattern = pattern.to_string();
+            }
+            "L" =>{
+                ret.is_level_limited = true;
+                let level: &str = args_iter.next().expect("need a number here");
+                ret.level = level.to_string();
             }
 
             "help" => {
