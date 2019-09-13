@@ -350,7 +350,7 @@ fn parse_parameter() -> Setting {
                 exit(0);
             }
             "version" => {
-                println!("wtree, version 0.2.0 by @waynexia");
+                println!("wtree, version 0.3.0 by @waynexia");
                 exit(0);
             }
 
