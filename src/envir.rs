@@ -23,18 +23,20 @@ pub struct Setting {
     pub is_quote: bool,
     pub is_full_path: bool,
     pub pattern_ignore_case: bool,
-    pub is_color: bool,        // -n, -C
-    pub need_protection: bool, // -p
-    pub need_uid: bool,        // -u
-    pub need_gid: bool,        // -g
-    pub need_size: u8,         // -s, -h, --si
-    pub need_ctime: bool,      // -D
-    pub need_inode: bool,      // --inodes
-    pub need_device: bool,     // --device
-    pub is_level_limited: bool, // -L
+    pub is_color: bool,               // -n, -C
+    pub need_protection: bool,        // -p
+    pub need_uid: bool,               // -u
+    pub need_gid: bool,               // -g
+    pub need_size: u8,                // -s, -h, --si
+    pub need_ctime: bool,             // -D
+    pub need_inode: bool,             // --inodes
+    pub need_device: bool,            // --device
+    pub is_level_limited: bool,       // -L
+    pub is_file_number_limited: bool, // --filelimit
 
     pub pattern: String,
     pub level: String,
+    pub max_files: String,
     pub root: PathBuf,
 }
 
@@ -64,8 +66,10 @@ impl Default for Setting {
             need_inode: false,
             need_device: false,
             is_level_limited: false,
+            is_file_number_limited: false,
             pattern: String::new(),
             level: String::new(),
+            max_files: String::new(),
             root: PathBuf::new(),
         }
     }
@@ -99,11 +103,22 @@ impl Setting {
         }
     }
 
-    pub fn get_level() -> i32{
-        if SETTING.is_level_limited == false{
+    pub fn get_level() -> i32 {
+        if SETTING.is_level_limited == false {
             return -1;
         }
-        return SETTING.level.parse::<i32>().expect("invalid number for after -L")
+        return SETTING
+            .level
+            .parse::<i32>()
+            .expect("invalid number after -L");
+    }
+
+    pub fn get_max_files() -> u32 {
+        assert!(SETTING.is_file_number_limited);
+        return SETTING
+            .max_files
+            .parse::<u32>()
+            .expect("invalid number after --filelimit");
     }
 
     fn error_report(hint: String) {
@@ -319,10 +334,15 @@ fn parse_parameter() -> Setting {
                 let pattern: &str = args_iter.next().expect("need a pattern here");
                 ret.pattern = pattern.to_string();
             }
-            "L" =>{
+            "L" => {
                 ret.is_level_limited = true;
                 let level: &str = args_iter.next().expect("need a number here");
                 ret.level = level.to_string();
+            }
+            "filelimit" => {
+                ret.is_file_number_limited = true;
+                let max_files: &str = args_iter.next().expect("need a number here");
+                ret.max_files = max_files.to_string();
             }
 
             "help" => {

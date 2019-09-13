@@ -39,15 +39,20 @@ pub fn print_tree() -> std::io::Result<()> {
     let root_entry = Entry::new(Setting::get_root());
     send(&prefix, &root_entry);
     prefix.set_init_value("├── ".to_string());
-    print_subdir(&root_entry, &mut prefix, &mut counter,Setting::get_level())?;
+    print_subdir(&root_entry, &mut prefix, &mut counter, Setting::get_level())?;
     counter.print_counter();
 
     Ok(())
 }
 
-fn print_subdir(root: &Entry, prefix: &mut Prefix, counter: &mut Counter, level_limit: i32) -> std::io::Result<()> {
-    if level_limit == 0{
-        return Ok(())
+fn print_subdir(
+    root: &Entry,
+    prefix: &mut Prefix,
+    counter: &mut Counter,
+    level_limit: i32,
+) -> std::io::Result<()> {
+    if level_limit == 0 {
+        return Ok(());
     }
     let path_list = match root.traverse() {
         Ok(list) => list,

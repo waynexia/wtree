@@ -160,11 +160,10 @@ impl Entry {
         }
     }
 
-    pub fn get_metadata(&self)->Metadata{
-        if self.path.exists(){
+    pub fn get_metadata(&self) -> Metadata {
+        if self.path.exists() {
             self.path.metadata().unwrap()
-        }
-        else{
+        } else {
             fs::metadata("/").unwrap()
         }
     }
@@ -214,6 +213,10 @@ impl Entry {
         })
         .filter(Entry::filter)
         .collect();
+
+        if SETTING.is_file_number_limited && path_list.len() > Setting::get_max_files() as usize {
+            return Ok(Vec::new());
+        }
 
         if SETTING.is_unsort {
             return Ok(path_list);
